@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text to Speech</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeInUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 1s ease-out;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="voiceinator bg-white shadow-2xl border-t-4 border-blue-400 rounded-lg p-8 max-w-md mx-auto fade-in-up">
+    <h1 class="text-3xl font-bold mb-6 text-center text-blue-500">Text to Speech</h1>
+
+    <div class="mb-4">
+      <select name="voice" id="voices" class="w-full p-2 border border-purple-300 rounded-md">
+        <option value="">Select A Voice</option>
+      </select>
+    </div>
+
+    <div class="mb-4">
+      <label for="rate" class="block text-gray-700">Rate:</label>
+      <input name="rate" type="range" min="0" max="3" value="1" step="0.1" class="w-full mt-1 border-blue-300">
+    </div>
+
+    <div class="mb-4">
+      <label for="pitch" class="block text-gray-700">Pitch:</label>
+      <input name="pitch" type="range" min="0" max="2" step="0.1" class="w-full mt-1 border-blue-300">
+    </div>
+
+    <div class="mb-4">
+      <textarea name="text" class="w-full p-2 border border-purple-400 rounded-md"
+        placeholder="Start typing...">Hello! I am Jarvis</textarea>
+    </div>
+
+    <div class="flex justify-between">
+      <button id="stop"
+        class="bg-red-500 text-white py-2 px-4 rounded-md shadow hover:bg-red-600 transition">Stop</button>
+      <button id="speak"
+        class="bg-blue-500 text-white py-2 px-4 rounded-md shadow hover:bg-blue-600 transition">Speak</button>
+    </div>
+  </div>
+
+  <script>
+    const msg = new SpeechSynthesisUtterance();
+    let voices = [];
+    const voicesDropdown = document.querySelector('[name="voice"]');
+    const options = document.querySelectorAll('[type="range"], [name="text"]');
+    const speakButton = document.querySelector('#speak');
+    const stopButton = document.querySelector('#stop');
+    msg.text = document.querySelector('[name="text"]').value;
+
+    function populateVoices() {
+      voices = speechSynthesis.getVoices();
+      const maleVoices = voices.filter(voice => voice.name.includes('Google UK English Male') || voice.name.includes('Microsoft David Desktop') || voice.name.includes('Google US English'));
+      const femaleVoices = voices.filter(voice => voice.name.includes('Google UK English Female') || voice.name.includes('Microsoft Zira Desktop') || voice.name.includes('Google US English'));
+      const selectedVoices = maleVoices.slice(0, 3).concat(femaleVoices.slice(0, 3));
+      voicesDropdown.innerHTML = selectedVoices
+        .map(voice => `<option value="${voice.name}">${voice.name} (${voice.lang})</option>`)
+        .join('');
+    }
+
+    function setVoice() {
+      msg.voice = voices.find(voice => voice.name === this.value);
+      toggle();
+    }
+
+    function toggle(startOver = true) {
+      speechSynthesis.cancel();
+      if (startOver) {
+        speechSynthesis.speak(msg);
+      }
+    }
+
+    function setOption() {
+      console.log(this.name, this.value);
+      msg[this.name] = this.value;
+      toggle();
+    }
+
+    speechSynthesis.addEventListener('voiceschanged', populateVoices);
+    populateVoices();
+    voicesDropdown.addEventListener('change', setVoice);
+    options.forEach(option => option.addEventListener('change', setOption));
+    speakButton.addEventListener('click', toggle);
+    stopButton.addEventListener('click', () => toggle(false));
+  </script>
+</body>
+
+</html>
